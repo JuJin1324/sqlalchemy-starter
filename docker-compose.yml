@@ -1,0 +1,13 @@
+version: '3.1'
+
+services:
+  db-local:
+    container_name: sqlalchemy-postgres
+    image: postgres:11.8
+    restart: always
+    ports:
+      - 15772:5432
+    environment:
+      POSTGRES_USER: scott
+      POSTGRES_PASSWORD: tiger
+      POSTGRES_DB: sqlalchemy
