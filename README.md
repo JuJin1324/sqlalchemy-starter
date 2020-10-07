@@ -36,6 +36,10 @@ class User(Base):
         self.password = password
 ``` 
 
+### query 함수
+* `query.first()`: limit 1   
+* `query.one()`: 조건의 행이 1개가 아니면 에러 발생
+
 ### Session 객체
 Python - Database 사이에 Session 에서 Database 에서 select 한 row 혹은 
 Database로 insert 등을 할 row 정보를 Session에 가지고 있는다. 
@@ -51,3 +55,26 @@ session.add(user)      # session 에 add 한다고 바로 DB에 반영되지 않
 * session.dirty: session에 연결된 객체가 수정/변경되면 session.dirty를 통해서 변경된 객체를 얻을 수 있다.
 * session.new: session에 새로 추가한 객체를 담고 있다.
 * session.commit(): session 에 
+
+### 관계 설정
+users(1) <---- (N, users.id)addresses   
+하나의 users row를 여러 addresses row가 참조한다.
+
+관계 사용시 `relationship("Class 이름")` 으로 사용하는 이유는 파이썬이 클래스를 순차적으로 해석하기 때문에 
+순서가 맞지 않는 경우 에러 발생을 막기 위한 것으로 보인다.   
+
+`user = relationship("User", backref=backref('addresses', order_by=id))`   
+backref: User 클래스의 인스턴스에서 addresses 항목으로 자기자신을 참조할 수 있다.
+양방향 관계 설정: backref로 인해서 Address 클래스에서는 User 클래스 정보를 `user` 변수로 사용이 가능하고 
+User 클래스에서 Address 객체는 위에 설정한 backref에서 'addresses'가 이름인 변수로 사용할 수가 있다.      
+예시)
+```python
+# User 에는 addresses 가 없지만 위에서 backref 에 addresses를 추가해주었기 때문에 가능하다.
+user = User('jack', 'Jack Bean', '1231234')
+print(jack.addresses)
+```
+
+Address 클래스에서 `user = relationship("User", backref=backref('addresses', order_by=id))` 를 지우고
+User 클래스에서 `addresses = relationship("Address", backref='user', order_by="Address.id")` 문장을 집어넣어서
+동일한 양방향 관계를 설정하는 것도 가능하다.
+

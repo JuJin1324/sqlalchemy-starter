@@ -1,8 +1,9 @@
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, func
 from sqlalchemy.orm import aliased
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
 from rdb.config import Session
-from rdb.models import User
+from rdb.models import User, create_all_tables
 
 session = Session()
 
@@ -119,15 +120,64 @@ def practice_null_and_not_null():
     print('')
 
 
+def query_all_first_one():
+    query = session.query(User).filter(User.name.like('%a%')).order_by(User.id)
+
+    # all
+    rows = query.all()
+    print(f'query.all() result: {rows}')
+
+    # first
+    row = query.first()
+    print(f'query.first() result: {row}')
+
+    # call one but returned multiple result
+    try:
+        user = query.one()
+    except MultipleResultsFound as e:
+        print(e)
+
+    # call one but no result
+    try:
+        user = query.filter(User.id == 99).one()
+    except NoResultFound as e:
+        print(e)
+
+    print('')
+
+
+def query_count():
+    # case 1: query().count()
+    count = session.query(User).filter(User.name.like('%a%')).count()
+    print(f'query().count(): {count}')
+
+    # case 2: func.count() + group by
+    rows = session.query(func.count(User.name), User.name).group_by(User.name).all()
+    print(f'func.count() + group by: {rows}')
+
+    # case 3: func.count('*')
+    rows = session.query(func.count('*')).select_from(User).scalar()
+    print(f"func.count('*'): {rows}")
+
+    # case 4: func.count(Primary Key): 해당 함수를 쓰면 select_from()이 필요없어진다.
+    rows = session.query(func.count(User.id)).scalar()
+    print(f"func.count(Primary Key): {rows}")
+
+    print('')
+
+
 if __name__ == '__main__':
-    practice_orderby()
-    practice_multiple_result()
-    practice_column_alias()
-    practice_entity_alias()
-    practice_limit_offset()
-    practice_filter_and_filter_by()
-    practice_and_or()
-    practice_equal_not_equal()
-    practice_match_and_like()
-    practice_in_not_in()
-    practice_null_and_not_null()
+    # create_all_tables()
+    # practice_orderby()
+    # practice_multiple_result()
+    # practice_column_alias()
+    # practice_entity_alias()
+    # practice_limit_offset()
+    # practice_filter_and_filter_by()
+    # practice_and_or()
+    # practice_equal_not_equal()
+    # practice_match_and_like()
+    # practice_in_not_in()
+    # practice_null_and_not_null()
+    # query_all_first_one()
+    query_count()
